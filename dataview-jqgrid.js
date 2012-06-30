@@ -15,24 +15,33 @@
         widgetEventPrefix: "dataview",
         options: {
             methodType: "GET",
+            parametersNames: {
+                page: "page",
+                rows: "rows",
+                sort: "sidx",
+                order: "sord",
+                search:"_search",
+                filter: "filters",
+                nd: "nd"
+            },
             paging: {
                 limit: 20
             },
             resource: null,
             source: function (request, response) {
                 var data = {
-                    "nd": new Date().getTime(),
-                    "rows": request.paging.limit,
-                    "page": (request.paging.offset / request.paging.limit) + 1
+                    request.parametersNames.nd: new Date().getTime(),
+                    request.parametersNames.rows: request.paging.limit,
+                    request.parametersNames.page: (request.paging.offset / request.paging.limit) + 1
                 };
 
                 if (request.sort.length === 1) {
                     if (request.sort[0].slice(0, 1) === "-") {
-                        data["sidx"] = request.sort[0].slice(1);
-                        data["sord"] = "desc";
+                        data[request.parametersNames.sort] = request.sort[0].slice(1);
+                        data[request.parametersNames.order] = "desc";
                     } else {
-                        data["sidx"] = request.sort[0];
-                        data["sord"] = "asc";
+                        data[request.parametersNames.sort] = request.sort[0];
+                        data[request.parametersNames.order] = "asc";
                     }
                 }
 
@@ -56,10 +65,10 @@
                         filters[filters.length] = "{\"field\":\"" + property + "\",\"op\":\"" + operators[filter.operator] + "\",\"data\":\"" + filter.value + "\"}";
                     });
 
-                    data["_search"] = true;
-                    data["filters"] = "{\"groupOp\":\"AND\",\"rules\":[" + filters.join(",") + "]}";
+                    data[request.parametersNames.search] = true;
+                    data[request.parametersNames.filter] = "{\"groupOp\":\"AND\",\"rules\":[" + filters.join(",") + "]}";
                 } else {
-                    data["_search"] = false;
+                    data[request.parametersNames.search] = false;
                 }
                 $.ajax({
                     url: request.resource,
